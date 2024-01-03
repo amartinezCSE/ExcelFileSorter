@@ -1,5 +1,10 @@
 ﻿@page "/excelupload"
+
+@using ExcelFileSorter.Interfaces
+
 @inject IJSRuntime JSRuntime
+@inject IExcelExtractor ExcelExtractor
+
 @rendermode InteractiveServer
 
 <h3>Excel Upload</h3>
@@ -17,11 +22,14 @@
             // Check if the file has a .xlsx extension
             if (file.Name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                // Process the file using ClosedXML or other logic
-                // For example, you can save the file or read its contents
-                // using ClosedXML.
-                // Your logic goes here
-                await JSRuntime.InvokeVoidAsync("console.log", "valid file format");
+                using (var stream = file.OpenReadStream())
+                {
+                    // Use ExcelExtractor service to extract data
+                    var extractedData = await ExcelExtractor.ExtractDataFromExcel(stream);
+
+                    // Now you have the extracted data, you can pass it to the DataCleaner service or perform additional operations
+                    await JSRuntime.InvokeVoidAsync("console.log", "Valid file format. Extracted Data:", extractedData);
+                }
             }
             else
             {

@@ -1,83 +1,46 @@
 ﻿using ClosedXML.Excel;
+using ExcelFileSorter.Interfaces;
 
 namespace ExcelFileSorter.Services 
 {
-    public static class ExcelExtractor
+    public class ExcelExtractor : IExcelExtractor
     {
-        
-        public static List<EngineCommandObject> MapFile(this Stream fileStream)
+        public async Task<Dictionary<string, List<object>>> ExtractDataFromExcel(Stream stream)
         {
-            var worksheet = GetWorksheet(fileStream);
-            var validHeaders = worksheet.GetWorksheetHeaders();
-            var validRows = worksheet.GetContentRows();
-            return validRows.GetObjects(validHeaders);
-        }
+            var result = new Dictionary<string, List<object>>();
 
-        private static IXLWorksheet GetWorksheet(Stream fileStream)
-        {
-            var workbook = new XLWorkbook(fileStream);
-            return workbook.Worksheets.First();
-        }
-
-        private static Dictionary<string, string> GetWorksheetHeaders(this IXLWorksheet worksheet)
-        {
-            var potentialHeaders = GetObjectHeaders();
-            var firstRow = worksheet.Row(1).Cells(true);
-            return firstRow
-                .Where(x => x != null && potentialHeaders.ContainsKey(x.Value.ToString()?.ToLower() ?? string.Empty))
-                .GroupBy(x => x.Value.ToString()?.ToLower() ?? string.Empty)
-                .ToDictionary(x => x.Key, x => x.First().Address.ColumnLetter.ToString());
-        }
-
-        private static Dictionary<string, string> GetObjectHeaders()
-        {
-            var propertyNames = typeof(EngineCommandObject).GetProperties().Select(x => x.Name);
-            return propertyNames.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(x => x.ToLower());
-        }
-
-        private static IEnumerable<IXLRow> GetContentRows(this IXLWorksheet worksheet)
-        {
-            return worksheet.Rows().Where(x => x.RowNumber() != 1 && !x.IsEmpty());
-        }
-
-        private static List<EngineCommandObject> GetObjects(this IEnumerable<IXLRow> validRows,
-            IReadOnlyDictionary<string, string> worksheetHeaders)
-        {
-            return validRows.Select(x => x.GetOneObject(worksheetHeaders)).ToList();
-        }
-
-        private static EngineCommandObject GetOneObject(this IXLRow row, IReadOnlyDictionary<string, string> worksheetHeaders)
-        {
-            return new EngineCommandObject
+            using (var workbook = new XLWorkbook(stream))
             {
-                Model = row.GetPropertyStringValue(worksheetHeaders, "Model"),
-                PerformanceNumber = row.GetPropertyStringValue(worksheetHeaders, "PerformanceNumber"),
-                Power = row.GetPropertyDecimalValue(worksheetHeaders, "Power"),
-                Speed = row.GetPropertyDecimalValue(worksheetHeaders, "Speed"),
-                BrakeSpecificFuelConsumption = worksheetHeaders.ContainsKey("BSFC")
-                        ? row.GetPropertyDecimalValue(worksheetHeaders, "BSFC")
-                    : row.GetPropertyDecimalValue(worksheetHeaders, "BrakeSpecificFuelConsumption"),
-                BrakeSpecificOilConsumption = worksheetHeaders.ContainsKey("BSOC")
-                    ? row.GetPropertyDecimalValue(worksheetHeaders, "BSOC")
-                    : row.GetPropertyDecimalValue(worksheetHeaders, "BrakeSpecificOilConsumption")
-            };
+                foreach (var worksheet in workbook.Worksheets)
+                {
+                    var sheetName = worksheet.Name;
+                    var columnData = ExtractColumns(worksheet);
+
+                    result.Add(sheetName, columnData);
+                }
+            }
+
+            return result;
         }
 
-        private static string GetPropertyStringValue(this IXLRow row,
-            IReadOnlyDictionary<string, string> worksheetHeaders, string rowKey)
+        private List<object> ExtractColumns(IXLWorksheet worksheet)
         {
-            var rowIsValid = worksheetHeaders.ContainsKey(rowKey.ToLower());
-            return !rowIsValid ? string.Empty : row.Cell($"{worksheetHeaders[rowKey.ToLower()]}").Value.ToString() ?? string.Empty;
-        }
+            // Implement logic to extract the columns you need from each worksheet
+            // For example, you can iterate over rows and columns and store the data
 
-        private static decimal GetPropertyDecimalValue(this IXLRow row, IReadOnlyDictionary<string, string> worksheetHeaders, string rowKey)
-        {
-            var rowIsValid = worksheetHeaders.ContainsKey(rowKey.ToLower());
-            if (!rowIsValid) return 0m;
+            // Dummy logic: Extracting data from the first two columns
+            var data = new List<object>();
+            foreach (var row in worksheet.RowsUsed())
+            {
+                data.Add(new
+                {
+                    Column1 = row.Cell(1).Value.ToString(),
+                    Column2 = row.Cell(2).Value.ToString()
+                    // Add more columns as needed
+                });
+            }
 
-            return !decimal.TryParse(row.Cell($"{worksheetHeaders[rowKey.ToLower()]}").Value.ToString(),
-                out var validDecimal) ? 0m : validDecimal;
+            return data;
         }
-       
     }
 }

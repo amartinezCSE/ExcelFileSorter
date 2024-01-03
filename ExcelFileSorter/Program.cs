@@ -1,10 +1,15 @@
 using ExcelFileSorter.Components;
+using ExcelFileSorter.Interfaces;
+using ExcelFileSorter.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Register your services here
+builder.Services.AddScoped<IExcelExtractor, ExcelExtractor>();
 
 var app = builder.Build();
 
