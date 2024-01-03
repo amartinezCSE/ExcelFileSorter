@@ -1,0 +1,42 @@
+﻿@page "/excelupload"
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<h3>Excel Upload</h3>
+
+<InputFile OnChange="@LoadFiles" multiple />
+
+@code {
+    
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        // Handle the uploaded file
+        var file = e.GetMultipleFiles().FirstOrDefault();
+        if (file != null)
+        {
+            // Check if the file has a .xlsx extension
+            if (file.Name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                // Process the file using ClosedXML or other logic
+                // For example, you can save the file or read its contents
+                // using ClosedXML.
+                // Your logic goes here
+                await JSRuntime.InvokeVoidAsync("console.log", "valid file format");
+            }
+            else
+            {
+                // Show an error message or take appropriate action for non-.xlsx files
+                // For example, you can display a message to the user
+                await JSRuntime.InvokeVoidAsync("console.log", "Invalid file format. Please upload a .xlsx file.");
+            }
+        }
+    }
+
+    private static byte[] ReadFile(string filePath)
+    {
+        using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        return File.ReadAllBytes(filePath);
+    }
+    
+}
