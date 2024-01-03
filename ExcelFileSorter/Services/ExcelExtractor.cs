@@ -4,7 +4,7 @@ namespace ExcelFileSorter.Services
 {
     public static class ExcelExtractor
     {
-        /*
+        
         public static List<EngineCommandObject> MapFile(this Stream fileStream)
         {
             var worksheet = GetWorksheet(fileStream);
@@ -78,6 +78,6 @@ namespace ExcelFileSorter.Services
             return !decimal.TryParse(row.Cell($"{worksheetHeaders[rowKey.ToLower()]}").Value.ToString(),
                 out var validDecimal) ? 0m : validDecimal;
         }
-        */
+       
     }
 }
