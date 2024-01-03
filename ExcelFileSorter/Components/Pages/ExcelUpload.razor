@@ -7,7 +7,6 @@
 <InputFile OnChange="@LoadFiles" multiple />
 
 @code {
-    
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
@@ -38,5 +37,4 @@
         using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         return File.ReadAllBytes(filePath);
     }
-    
 }
